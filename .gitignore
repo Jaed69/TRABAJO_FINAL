@@ -1,0 +1,25 @@
+
+### Archivo `.gitignore`
+
+```gitignore
+# Ignorar archivos y carpetas generados por Python
+__pycache__/
+*.py[cod]
+
+# Ignorar archivos de entorno virtual
+venv/
+ENV/
+env/
+.venv/
+
+# Ignorar archivos de configuración de herramientas de desarrollo
+.idea/
+.vscode/
+
+# Ignorar archivos de logs y bases de datos temporales
+*.log
+*.sqlite3
+
+# Ignorar archivos de sistema operativos
+.DS_Store
+Thumbs.db
