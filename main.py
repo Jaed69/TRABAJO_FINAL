@@ -2,7 +2,8 @@ import sys
 import pandas as pd
 import random
 import networkx as nx
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton, QComboBox, QSplitter, QDialog
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
+                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox)
 from PyQt5.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -28,8 +29,8 @@ class SubgraphWindow(QDialog):
     def draw_subgraph(self):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        pos = nx.spring_layout(self.subgraph)
-        nx.draw(self.subgraph, pos, with_labels=True, node_size=500, node_color='orange', edge_color='red', width=2, ax=ax)
+        pos = nx.spring_layout(self.subgraph, k=0.5, iterations=100)
+        nx.draw(self.subgraph, pos, with_labels=True, node_size=700, node_color='orange', edge_color='red', width=2, font_size=10, ax=ax)
         self.canvas.draw()
 
 class GraphApp(QMainWindow):
@@ -101,10 +102,23 @@ class GraphApp(QMainWindow):
         self.result_label = QLabel('Shortest Path: ')
         self.result_label.setWordWrap(True)
 
+        # Formulario para agregar nueva persona
+        form_layout = QFormLayout()
+        self.new_person_input = QLineEdit()
+        self.connections_spinbox = QSpinBox()
+        self.connections_spinbox.setRange(1, 10)
+        form_layout.addRow('New Person Name:', self.new_person_input)
+        form_layout.addRow('Number of Connections:', self.connections_spinbox)
+
+        add_person_button = QPushButton('Add Person')
+        add_person_button.clicked.connect(self.add_person)
+
         left_layout.addWidget(self.combo_box_1)
         left_layout.addWidget(self.combo_box_2)
         left_layout.addWidget(find_button)
         left_layout.addWidget(self.result_label)
+        left_layout.addLayout(form_layout)
+        left_layout.addWidget(add_person_button)
 
         left_widget.setLayout(left_layout)
 
@@ -123,8 +137,8 @@ class GraphApp(QMainWindow):
     def draw_graph(self):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        pos = nx.spring_layout(self.graph)
-        nx.draw(self.graph, pos, with_labels=True, node_size=500, node_color='skyblue', ax=ax)
+        pos = nx.spring_layout(self.graph, k=0.5, iterations=100)
+        nx.draw(self.graph, pos, with_labels=True, node_size=700, node_color='skyblue', edge_color='gray', font_size=10, ax=ax)
         self.canvas.draw()
 
     def find_shortest_path(self):
@@ -140,6 +154,23 @@ class GraphApp(QMainWindow):
 
             except nx.NetworkXNoPath:
                 self.result_label.setText('No path exists between the selected persons.')
+
+    def add_person(self):
+        new_person = self.new_person_input.text()
+        num_connections = self.connections_spinbox.value()
+        if new_person and new_person not in self.graph:
+            self.graph.add_node(new_person)
+            self.names.append(new_person)
+            self.combo_box_1.addItem(new_person)
+            self.combo_box_2.addItem(new_person)
+            
+            existing_nodes = list(self.graph.nodes)
+            existing_nodes.remove(new_person)  # Remove the new person from the list to avoid self-loops
+            connections = random.sample(existing_nodes, num_connections)
+            for connection in connections:
+                self.graph.add_edge(new_person, connection)
+
+            self.draw_graph()
 
     def show_subgraph(self, subgraph):
         self.subgraph_window = SubgraphWindow(subgraph)
