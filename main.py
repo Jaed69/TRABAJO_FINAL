@@ -3,7 +3,7 @@ import pandas as pd
 import random
 import networkx as nx
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
-                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox)
+                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox, QColorDialog)
 from PyQt5.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -134,10 +134,10 @@ class GraphApp(QMainWindow):
 
         self.draw_graph()
 
-    def draw_graph(self):
+    def draw_graph(self, layout_algo=nx.spring_layout, **kwargs):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        pos = nx.spring_layout(self.graph, k=0.5, iterations=100)
+        pos = layout_algo(self.graph, **kwargs)
         nx.draw(self.graph, pos, with_labels=True, node_size=700, node_color='skyblue', edge_color='gray', font_size=10, ax=ax)
         self.canvas.draw()
 
