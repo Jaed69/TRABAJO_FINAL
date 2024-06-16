@@ -3,19 +3,20 @@ import pandas as pd
 import random
 import networkx as nx
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
-                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox, QColorDialog)
+                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox)
 from PyQt5.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class SubgraphWindow(QDialog):
-    def __init__(self, subgraph):
+    def __init__(self, subgraph, title='Subgraph'):
         super().__init__()
         self.subgraph = subgraph
+        self.title = title
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Subgraph Shortest Path')
+        self.setWindowTitle(self.title)
         self.setGeometry(100, 100, 800, 600)
 
         layout = QVBoxLayout()
@@ -113,12 +114,17 @@ class GraphApp(QMainWindow):
         add_person_button = QPushButton('Add Person')
         add_person_button.clicked.connect(self.add_person)
 
+        # Botón para mostrar amigos
+        show_friends_button = QPushButton('Show Friends')
+        show_friends_button.clicked.connect(self.show_friends)
+
         left_layout.addWidget(self.combo_box_1)
         left_layout.addWidget(self.combo_box_2)
         left_layout.addWidget(find_button)
         left_layout.addWidget(self.result_label)
         left_layout.addLayout(form_layout)
         left_layout.addWidget(add_person_button)
+        left_layout.addWidget(show_friends_button)
 
         left_widget.setLayout(left_layout)
 
@@ -150,7 +156,7 @@ class GraphApp(QMainWindow):
                 self.result_label.setText(f'Shortest Path: {" -> ".join(shortest_path)}')
 
                 subgraph = self.graph.subgraph(shortest_path).copy()
-                self.show_subgraph(subgraph)
+                self.show_subgraph(subgraph, title='Shortest Path Subgraph')
 
             except nx.NetworkXNoPath:
                 self.result_label.setText('No path exists between the selected persons.')
@@ -172,8 +178,16 @@ class GraphApp(QMainWindow):
 
             self.draw_graph()
 
-    def show_subgraph(self, subgraph):
-        self.subgraph_window = SubgraphWindow(subgraph)
+    def show_friends(self):
+        selected_person = self.combo_box_1.currentText()
+        if selected_person:
+            friends = list(self.graph.neighbors(selected_person))
+            friends.append(selected_person)  # Include the selected person in the subgraph
+            subgraph = self.graph.subgraph(friends).copy()
+            self.show_subgraph(subgraph, title=f'{selected_person}\'s Friends')
+
+    def show_subgraph(self, subgraph, title):
+        self.subgraph_window = SubgraphWindow(subgraph, title=title)
         self.subgraph_window.exec_()
 
 if __name__ == '__main__':
