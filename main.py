@@ -1,78 +1,131 @@
 import sys
 import random
 import networkx as nx
-import pygraphviz as pgv
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton, QListWidget, QHBoxLayout, QSplitter, QDialog
 from PyQt5.QtCore import Qt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-def create_random_graph():
-    G = nx.gnp_random_graph(10, 0.3, directed=True)
-    for (u, v) in G.edges():
-        G.edges[u, v]['weight'] = random.randint(1, 10)
-    return G
+class SubgraphWindow(QDialog):
+    def __init__(self, subgraph):
+        super().__init__()
+        self.subgraph = subgraph
+        self.initUI()
 
-def draw_graph(G, filename):
-    A = nx.nx_agraph.to_agraph(G)
-    A.layout(prog='dot')
-    A.draw(filename)
+    def initUI(self):
+        self.setWindowTitle('Subgraph Shortest Path')
+        self.setGeometry(100, 100, 800, 600)
 
-def apply_dijkstra(G, source):
-    return nx.single_source_dijkstra_path(G, source)
+        layout = QVBoxLayout()
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.canvas)
 
-class DijkstraApp(QWidget):
+        self.setLayout(layout)
+        self.draw_subgraph()
+
+    def draw_subgraph(self):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        pos = nx.spring_layout(self.subgraph)
+        nx.draw(self.subgraph, pos, with_labels=True, node_size=500, node_color='orange', edge_color='red', width=2, ax=ax)
+        self.canvas.draw()
+
+class GraphApp(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        # Crear el grafo aleatorio
+        self.graph = self.create_random_graph(100)
+        self.names = list(self.graph.nodes)
+
+        # Configurar la interfaz de usuario
         self.initUI()
-        
+
+    def create_random_graph(self, num_nodes):
+        G = nx.Graph()
+        for i in range(num_nodes):
+            G.add_node(f'Person {i + 1}')
+        for i in range(num_nodes):
+            for j in range(i + 1, num_nodes):
+                if random.random() < 0.1:  # 10% de probabilidad de conexión
+                    G.add_edge(f'Person {i + 1}', f'Person {j + 1}')
+        return G
+
     def initUI(self):
-        self.layout = QVBoxLayout()
-        
-        self.graph_label = QLabel("Grafo Original", self)
-        self.layout.addWidget(self.graph_label)
-        
-        self.graph_view = QGraphicsView(self)
-        self.layout.addWidget(self.graph_view)
-        
-        self.result_label = QLabel("Grafo con Dijkstra aplicado", self)
-        self.layout.addWidget(self.result_label)
-        
-        self.result_view = QGraphicsView(self)
-        self.layout.addWidget(self.result_view)
-        
-        self.btn = QPushButton('Generar Grafo y Aplicar Dijkstra', self)
-        self.btn.clicked.connect(self.generate_graph)
-        self.layout.addWidget(self.btn)
-        
-        self.setLayout(self.layout)
-        self.setWindowTitle('Visualización de Dijkstra')
-        self.show()
-    
-    def generate_graph(self):
-        G = create_random_graph()
-        
-        # Guardar y mostrar el grafo original
-        draw_graph(G, 'graph_before.png')
-        pixmap = QPixmap('graph_before.png')
-        scene = QGraphicsScene()
-        scene.addItem(QGraphicsPixmapItem(pixmap))
-        self.graph_view.setScene(scene)
-        
-        # Aplicar Dijkstra
-        source = list(G.nodes())[0]
-        dijkstra_path = apply_dijkstra(G, source)
-        
-        # Dibujar y mostrar el grafo con Dijkstra aplicado
-        H = G.copy()
-        edges_in_path = [(dijkstra_path[node], node) for node in dijkstra_path if node != source]
-        nx.set_edge_attributes(H, {edge: {'color': 'red'} for edge in edges_in_path})
-        draw_graph(H, 'graph_after.png')
-        pixmap = QPixmap('graph_after.png')
-        scene = QGraphicsScene()
-        scene.addItem(QGraphicsPixmapItem(pixmap))
-        self.result_view.setScene(scene)
+        self.setWindowTitle('Graph Shortest Path Finder')
+        self.setGeometry(100, 100, 1200, 800)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        layout = QVBoxLayout()
+
+        splitter = QSplitter(Qt.Horizontal)
+
+        left_widget = QWidget()
+        left_layout = QVBoxLayout()
+
+        self.list_widget = QListWidget()
+        for name in self.names:
+            self.list_widget.addItem(name)
+
+        self.list_widget_2 = QListWidget()
+        for name in self.names:
+            self.list_widget_2.addItem(name)
+
+        find_button = QPushButton('Find Shortest Path')
+        find_button.clicked.connect(self.find_shortest_path)
+
+        self.result_label = QLabel('Shortest Path: ')
+        self.result_label.setWordWrap(True)
+
+        left_layout.addWidget(self.list_widget)
+        left_layout.addWidget(self.list_widget_2)
+        left_layout.addWidget(find_button)
+        left_layout.addWidget(self.result_label)
+
+        left_widget.setLayout(left_layout)
+
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+
+        splitter.addWidget(left_widget)
+        splitter.addWidget(self.canvas)
+
+        layout.addWidget(splitter)
+
+        central_widget.setLayout(layout)
+
+        self.draw_graph()
+
+    def draw_graph(self):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        pos = nx.spring_layout(self.graph)
+        nx.draw(self.graph, pos, with_labels=True, node_size=500, node_color='skyblue', ax=ax)
+        self.canvas.draw()
+
+    def find_shortest_path(self):
+        person1 = self.list_widget.currentItem().text()
+        person2 = self.list_widget_2.currentItem().text()
+        if person1 and person2:
+            try:
+                shortest_path = nx.dijkstra_path(self.graph, person1, person2)
+                self.result_label.setText(f'Shortest Path: {" -> ".join(shortest_path)}')
+
+                subgraph = self.graph.subgraph(shortest_path).copy()
+                self.show_subgraph(subgraph)
+
+            except nx.NetworkXNoPath:
+                self.result_label.setText('No path exists between the selected persons.')
+
+    def show_subgraph(self, subgraph):
+        self.subgraph_window = SubgraphWindow(subgraph)
+        self.subgraph_window.exec_()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = DijkstraApp()
+    ex = GraphApp()
+    ex.show()
     sys.exit(app.exec_())
