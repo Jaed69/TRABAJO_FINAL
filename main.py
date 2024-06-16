@@ -1,7 +1,7 @@
 import sys
 import random
 import networkx as nx
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton, QListWidget, QHBoxLayout, QSplitter, QDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton, QComboBox, QSplitter, QDialog
 from PyQt5.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -66,13 +66,11 @@ class GraphApp(QMainWindow):
         left_widget = QWidget()
         left_layout = QVBoxLayout()
 
-        self.list_widget = QListWidget()
+        self.combo_box_1 = QComboBox()
+        self.combo_box_2 = QComboBox()
         for name in self.names:
-            self.list_widget.addItem(name)
-
-        self.list_widget_2 = QListWidget()
-        for name in self.names:
-            self.list_widget_2.addItem(name)
+            self.combo_box_1.addItem(name)
+            self.combo_box_2.addItem(name)
 
         find_button = QPushButton('Find Shortest Path')
         find_button.clicked.connect(self.find_shortest_path)
@@ -80,8 +78,8 @@ class GraphApp(QMainWindow):
         self.result_label = QLabel('Shortest Path: ')
         self.result_label.setWordWrap(True)
 
-        left_layout.addWidget(self.list_widget)
-        left_layout.addWidget(self.list_widget_2)
+        left_layout.addWidget(self.combo_box_1)
+        left_layout.addWidget(self.combo_box_2)
         left_layout.addWidget(find_button)
         left_layout.addWidget(self.result_label)
 
@@ -107,8 +105,8 @@ class GraphApp(QMainWindow):
         self.canvas.draw()
 
     def find_shortest_path(self):
-        person1 = self.list_widget.currentItem().text()
-        person2 = self.list_widget_2.currentItem().text()
+        person1 = self.combo_box_1.currentText()
+        person2 = self.combo_box_2.currentText()
         if person1 and person2:
             try:
                 shortest_path = nx.dijkstra_path(self.graph, person1, person2)
