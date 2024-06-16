@@ -1,6 +1,6 @@
-# Mi Primera Aplicación en PyQt5
+# Programa en Python aplicando el algoritmo de Dijkstra
 
-Este es un ejemplo básico de una aplicación gráfica utilizando PyQt5 en Python.
+Este es un programa que realiza la busqueda  y correlación de 2 usuarios, para facilitar la creación de busqueda de círculos sociales de igual interés, así proveer información para facilitar el contacto y relación entre estudiantes multi académicos de la UPC usando el algoritmo de Dijkstra.
 
 ## Requisitos
 
