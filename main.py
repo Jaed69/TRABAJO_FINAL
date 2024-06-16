@@ -1,4 +1,5 @@
 import sys
+import pandas as pd
 import random
 import networkx as nx
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton, QComboBox, QSplitter, QDialog
@@ -35,21 +36,43 @@ class GraphApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Crear el grafo aleatorio
-        self.graph = self.create_random_graph(100)
+        # Crear el grafo desde el archivo Excel
+        self.graph = self.create_graph_from_excel('nombres_personas.xlsx')
         self.names = list(self.graph.nodes)
 
         # Configurar la interfaz de usuario
         self.initUI()
 
-    def create_random_graph(self, num_nodes):
-        G = nx.Graph()
-        for i in range(num_nodes):
-            G.add_node(f'Person {i + 1}')
-        for i in range(num_nodes):
-            for j in range(i + 1, num_nodes):
-                if random.random() < 0.1:  # 10% de probabilidad de conexión
-                    G.add_edge(f'Person {i + 1}', f'Person {j + 1}')
+    def create_graph_from_excel(self, excel_file):
+        df = pd.read_excel(excel_file, sheet_name='Hoja1')
+        personas_A = df['Personas 1'].astype(str).tolist()  # Convertir a cadenas
+        personas_B = df['Personas 2'].astype(str).tolist()  # Convertir a cadenas
+
+        G = nx.DiGraph()
+
+        # Conexiones dentro de la columna A
+        for persona in personas_A:
+            num_conexiones = random.randint(2, 4)
+            conexiones = random.sample(personas_A, num_conexiones)
+            for conexion in conexiones:
+                if persona != conexion:
+                    G.add_edge(persona, conexion)
+
+        # Conexiones dentro de la columna B
+        for persona in personas_B:
+            num_conexiones = random.randint(2, 4)
+            conexiones = random.sample(personas_B, num_conexiones)
+            for conexion in conexiones:
+                if persona != conexion:
+                    G.add_edge(persona, conexion)
+
+        # Conexiones entre las columnas A y B
+        for persona_A in personas_A:
+            num_conexiones = random.randint(2, 4)
+            conexiones = random.sample(personas_B, num_conexiones)
+            for conexion in conexiones:
+                G.add_edge(persona_A, conexion)
+
         return G
 
     def initUI(self):
