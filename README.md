@@ -1,36 +1,23 @@
-# Programa en Python aplicando el algoritmo de Dijkstra
+# Proyecto de investigacion sobre las relaciones de los alumnos de UPC Monterrico
 
-Este es un programa que realiza la busqueda  y correlación de 2 usuarios, para facilitar la creación de busqueda de círculos sociales de igual interés, así proveer información para facilitar el contacto y relación entre estudiantes multi académicos de la UPC usando el algoritmo de Dijkstra.
+# Descripción del problema
 
-# Descripción del conjunto de datos (data set)
+En la vida universitaria y profesional, la capacidad para establecer contactos y relaciones es crucial para el éxito laboral. Sin embargo, muchos jóvenes profesionales evitan relacionarse con otros estudiantes por miedo o vergüenza. La "Teoría de los 6 grados de separación" sugiere que cualquier persona puede conectarse con otra a través de cinco intermediarios. Las redes sociales, especialmente Instagram, han transformado estas conexiones, y nuestro proyecto se enfoca en analizar la red de seguidores de la página oficial de la UPC en Instagram.
 
-Se identificaron el uso de una base de datos para la realización completa de este proyecto. La base de datos recolecta usuarios de la plataforma Instagram que siguen a  la cuenta de UPC edumonterrico. Para nuestro programa usamos un database que contiene 1500 usuarios de Instagram, en la cuales se asignó un nodo para cada usuario y las relaciones entre ellos , es decir sus seguidores son los arcos existentes entre nodo y nodo.
+# Propuesta
 
-# Diseño del aplicativo
+Nuestra App tiene como objetivo ver que tanta relacion hay entre 1 o mas alumnos de UPC, para esto hemos realizado una base de datos con los usuarios de la pagina oficial de UPC Monterrico de la red social Instagram, esto con la finalidad de ayudar a comprender el grado de relaciones entre los seguidores, promoviendo el intercambio de conocimientos y el crecimiento profesional entre estudiantes. Al identificar puntos de encuentro y áreas de interés común, se podrán diseñar estrategias que fomenten la colaboración y el desarrollo profesional en entornos digitales.
 
-Describir los procesos del diseño del aplicativo considerando las etapas de la ingeniería de software o considerando el análisis de algoritmos según sea el caso.
+# Herramientas
 
-# Requisitos
+Para la realizacion de esta App usamos las libreias:
 
-Recopilación y análisis de las necesidades y expectativas del usuario o cliente. Aquí se definen las funcionalidades que debe tener el aplicativo.
+       random
+       networkx
+       pandas
+       matplotlib
+       
 
-# Diseño
 
-Creación de la arquitectura del software, es decir, cómo se estructurarán y se relacionarán los diferentes componentes del sistema. Incluye:
-  # Diseño de la arquitectura:
-    Estructura global del sistema y sus componentes principales.
-  # Diseño detallado:
-    Descripción de cada módulo o componente del sistema con mayor precisión.
 
-# Implementación
-
-Desarrollo del código fuente basado en el diseño previo.
-
-# Pruebas
-
-Verificación y validación del sistema para asegurarse de que cumple con los requisitos y funciona correctamente.
-
-# Mantenimiento
-
-Corrección de errores y actualización del software después de su entrega. 
 
