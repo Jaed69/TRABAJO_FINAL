@@ -91,16 +91,18 @@ class GraphApp(QMainWindow):
         left_widget = QWidget()
         left_layout = QVBoxLayout()
 
+        self.combo_1_label = QLabel('Origen')
         self.combo_box_1 = QComboBox()
+        self.combo_2_label = QLabel('Destino')
         self.combo_box_2 = QComboBox()
         for name in self.names:
             self.combo_box_1.addItem(name)
             self.combo_box_2.addItem(name)
 
-        find_button = QPushButton('Find Shortest Path')
+        find_button = QPushButton('Encontrar la conexión más corta')
         find_button.clicked.connect(self.find_shortest_path)
 
-        self.result_label = QLabel('Shortest Path: ')
+        self.result_label = QLabel('Ruta de Amigos: ')
         self.result_label.setWordWrap(True)
 
         # Formulario para agregar nueva persona
@@ -108,17 +110,19 @@ class GraphApp(QMainWindow):
         self.new_person_input = QLineEdit()
         self.connections_spinbox = QSpinBox()
         self.connections_spinbox.setRange(1, 10)
-        form_layout.addRow('New Person Name:', self.new_person_input)
-        form_layout.addRow('Number of Connections:', self.connections_spinbox)
+        form_layout.addRow('Nombre de nueva persona:', self.new_person_input)
+        form_layout.addRow('Numero de Amigos:', self.connections_spinbox)
 
-        add_person_button = QPushButton('Add Person')
+        add_person_button = QPushButton('Agregar Persona')
         add_person_button.clicked.connect(self.add_person)
 
         # Botón para mostrar amigos
-        show_friends_button = QPushButton('Show Friends')
+        show_friends_button = QPushButton('Mostrar Amigos')
         show_friends_button.clicked.connect(self.show_friends)
 
+        left_layout.addWidget(self.combo_1_label)
         left_layout.addWidget(self.combo_box_1)
+        left_layout.addWidget(self.combo_2_label)
         left_layout.addWidget(self.combo_box_2)
         left_layout.addWidget(find_button)
         left_layout.addWidget(self.result_label)
@@ -153,13 +157,13 @@ class GraphApp(QMainWindow):
         if person1 and person2:
             try:
                 shortest_path = nx.dijkstra_path(self.graph, person1, person2)
-                self.result_label.setText(f'Shortest Path: {" -> ".join(shortest_path)}')
+                self.result_label.setText(f'Conexion: {" -> ".join(shortest_path)}')
 
                 subgraph = self.graph.subgraph(shortest_path).copy()
-                self.show_subgraph(subgraph, title='Shortest Path Subgraph')
+                self.show_subgraph(subgraph, title='Ruta de Amigos')
 
             except nx.NetworkXNoPath:
-                self.result_label.setText('No path exists between the selected persons.')
+                self.result_label.setText('No existe ruta entre las personas seleccionadas.')
 
     def add_person(self):
         new_person = self.new_person_input.text()
@@ -184,7 +188,7 @@ class GraphApp(QMainWindow):
             friends = list(self.graph.neighbors(selected_person))
             friends.append(selected_person)  # Include the selected person in the subgraph
             subgraph = self.graph.subgraph(friends).copy()
-            self.show_subgraph(subgraph, title=f'{selected_person}\'s Friends')
+            self.show_subgraph(subgraph, title=f'{selected_person}\'s Amigos')
 
     def show_subgraph(self, subgraph, title):
         self.subgraph_window = SubgraphWindow(subgraph, title=title)
