@@ -10,9 +10,10 @@ Nuestra App tiene como objetivo ver que tanta relacion hay entre 1 o mas alumnos
 
 # Herramientas
 
-Para la realizacion de esta App usamos las libreias del lenguaje:
+Para la realizacion de esta App usamos las libreias de Python:
 
        random
+       sys
        networkx
        pandas
        matplotlib
