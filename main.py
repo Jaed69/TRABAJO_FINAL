@@ -8,47 +8,47 @@ from PyQt5.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-class SubgraphWindow(QDialog):
-    def __init__(self, subgraph, title='Subgraph'):
+class VentanaSubgrafo(QDialog):
+    def __init__(self, subgrafo, titulo='Sub Grafo'):
         super().__init__()
-        self.subgraph = subgraph
-        self.title = title
-        self.initUI()
+        self.subgrafo = subgrafo
+        self.titulo = titulo
+        self.iniciarUI()
 
-    def initUI(self):
-        self.setWindowTitle(self.title)
+    def iniciarUI(self):
+        self.setWindowTitle(self.titulo)
         self.setGeometry(100, 100, 800, 600)
 
         layout = QVBoxLayout()
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.canvas)
+        self.figura = Figure()
+        self.lienzo = FigureCanvas(self.figura)
+        layout.addWidget(self.lienzo)
 
         self.setLayout(layout)
-        self.draw_subgraph()
+        self.dibujarSubgrafo()
 
-    def draw_subgraph(self):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-        pos = nx.spring_layout(self.subgraph, k=0.5, iterations=100)
-        nx.draw(self.subgraph, pos, with_labels=True, node_size=700, node_color='orange', edge_color='red', width=2, font_size=10, ax=ax)
-        self.canvas.draw()
+    def dibujarSubgrafo(self):
+        self.figura.clear()
+        ax = self.figura.add_subplot(111)
+        pos = nx.spring_layout(self.subgrafo, k=0.5, iterations=100)
+        nx.draw(self.subgrafo, pos, with_labels=True, node_size=700, node_color='orange', edge_color='red', width=2, font_size=10, ax=ax)
+        self.lienzo.draw()
 
-class GraphApp(QMainWindow):
+class AplicacionGrafo(QMainWindow):
     def __init__(self):
         super().__init__()
 
         # Crear el grafo desde el archivo Excel
-        self.graph = self.create_graph_from_excel('nombres_personas.xlsx')
-        self.names = list(self.graph.nodes)
+        self.grafo = self.crearGrafosDesdeExcel('nombres_personas.xlsx')
+        self.nombres = list(self.grafo.nodes)
 
         # Configurar la interfaz de usuario
-        self.initUI()
+        self.iniciarUI()
 
-    def create_graph_from_excel(self, excel_file):
-        df = pd.read_excel(excel_file, sheet_name='Hoja1')
-        personas_A = df['Personas 1'].astype(str).tolist()  # Convertir a cadenas
-        personas_B = df['Personas 2'].astype(str).tolist()  # Convertir a cadenas
+    def crearGrafosDesdeExcel(self, archivo_excel):
+        df = pd.read_excel(archivo_excel, sheet_name='Hoja1')
+        personas_A = df['Personas 1'].astype(str).tolist()
+        personas_B = df['Personas 2'].astype(str).tolist()
 
         G = nx.DiGraph()
 
@@ -77,125 +77,249 @@ class GraphApp(QMainWindow):
 
         return G
 
-    def initUI(self):
-        self.setWindowTitle('Graph Shortest Path Finder')
-        self.setGeometry(100, 100, 1200, 800)
+    def iniciarUI(self):
+        self.setWindowTitle('Trabajo Final Complejidad')
+        self.setGeometry(100, 100, 1600, 900)  # Aumentamos el tamaño de la ventana principal
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+        widget_central = QWidget()
+        self.setCentralWidget(widget_central)
 
         layout = QVBoxLayout()
 
-        splitter = QSplitter(Qt.Horizontal)
+        divisor = QSplitter(Qt.Horizontal)
 
-        left_widget = QWidget()
-        left_layout = QVBoxLayout()
+        widget_izquierdo = QWidget()
+        layout_izquierdo = QVBoxLayout()
 
-        self.combo_1_label = QLabel('Origen')
-        self.combo_box_1 = QComboBox()
-        self.combo_2_label = QLabel('Destino')
-        self.combo_box_2 = QComboBox()
-        for name in self.names:
-            self.combo_box_1.addItem(name)
-            self.combo_box_2.addItem(name)
+        # Estilo para los subtítulos
+        estilo_etiqueta = """
+            QLabel {
+                font-size: 16px;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 20px;
+            }
+        """
 
-        find_button = QPushButton('Encontrar la conexión más corta')
-        find_button.clicked.connect(self.find_shortest_path)
+        self.etiqueta_origen = QLabel('Origen')
+        self.etiqueta_origen.setStyleSheet(estilo_etiqueta)
+        self.combo_origen = QComboBox()
+        self.etiqueta_destino = QLabel('Destino')
+        self.etiqueta_destino.setStyleSheet(estilo_etiqueta)
+        self.combo_destino = QComboBox()
 
-        self.result_label = QLabel('Ruta de Amigos: ')
-        self.result_label.setWordWrap(True)
+        # Estilo para el QComboBox
+        estilo_combobox = """
+            QComboBox {
+                font-size: 18px; /* Tamaño de fuente más grande */
+                padding: 10px; /* Aumentar el relleno */
+                min-width: 200px; /* Ancho mínimo */
+                min-height: 40px; /* Altura mínima */
+            }
+            QComboBox QAbstractItemView {
+                font-size: 18px; /* Tamaño de fuente más grande para las opciones */
+                padding: 10px; /* Aumentar el relleno */
+            }
+        """
+        self.combo_origen.setStyleSheet(estilo_combobox)
+        self.combo_destino.setStyleSheet(estilo_combobox)
+
+        for nombre in self.nombres:
+            self.combo_origen.addItem(nombre)
+            self.combo_destino.addItem(nombre)
+
+        boton_encontrar = QPushButton('Encontrar la conexión más corta')
+        boton_encontrar.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                font-size: 14px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+        boton_encontrar.clicked.connect(self.encontrarCaminoMasCorto)
+
+        self.etiqueta_resultado = QLabel('Ruta de Amigos: ')
+        self.etiqueta_resultado.setStyleSheet("QLabel { font-size: 14px; }")
+        self.etiqueta_resultado.setWordWrap(True)
 
         # Formulario para agregar nueva persona
-        form_layout = QFormLayout()
-        self.new_person_input = QLineEdit()
-        self.connections_spinbox = QSpinBox()
-        self.connections_spinbox.setRange(1, 10)
-        form_layout.addRow('Nombre de nueva persona:', self.new_person_input)
-        form_layout.addRow('Numero de Amigos:', self.connections_spinbox)
+        layout_formulario = QFormLayout()
+        self.entrada_nueva_persona = QLineEdit()
+        self.entrada_nueva_persona.setStyleSheet("""
+            QLineEdit {
+                font-size: 16px; /* Tamaño de fuente */
+                padding: 8px; /* Relleno */
+                min-height: 30px; /* Altura mínima */
+            }
+        """)
+        self.spinbox_conexiones = QSpinBox()
+        self.spinbox_conexiones.setRange(1, 10)
+        self.spinbox_conexiones.setStyleSheet("""
+            QSpinBox {
+                font-size: 16px; /* Tamaño de fuente */
+                padding: 8px; /* Relleno */
+                min-height: 30px; /* Altura mínima */
+            }
+        """)
+        layout_formulario.addRow('Nombre de nueva persona:', self.entrada_nueva_persona)
+        layout_formulario.addRow('Número de Amigos:', self.spinbox_conexiones)
 
-        add_person_button = QPushButton('Agregar Persona')
-        add_person_button.clicked.connect(self.add_person)
+        boton_agregar_persona = QPushButton('Agregar Persona')
+        boton_agregar_persona.setStyleSheet("""
+            QPushButton {
+                background-color: #008CBA;
+                color: white;
+                padding: 10px 20px;
+                font-size: 14px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #007B9F;
+            }
+        """)
+        boton_agregar_persona.clicked.connect(self.agregarPersona)
 
         # Botón para mostrar amigos
-        show_friends_button = QPushButton('Mostrar Amigos')
-        show_friends_button.clicked.connect(self.show_friends)
+        boton_mostrar_amigos = QPushButton('Mostrar Amigos')
+        boton_mostrar_amigos.setStyleSheet("""
+            QPushButton {
+                background-color: #f44336;
+                color: white;
+                padding: 10px 20px;
+                font-size: 14px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #d32f2f;
+            }
+        """)
+        boton_mostrar_amigos.clicked.connect(self.mostrarAmigos)
 
-        left_layout.addWidget(self.combo_1_label)
-        left_layout.addWidget(self.combo_box_1)
-        left_layout.addWidget(self.combo_2_label)
-        left_layout.addWidget(self.combo_box_2)
-        left_layout.addWidget(find_button)
-        left_layout.addWidget(self.result_label)
-        left_layout.addLayout(form_layout)
-        left_layout.addWidget(add_person_button)
-        left_layout.addWidget(show_friends_button)
+        layout_izquierdo.addWidget(self.etiqueta_origen)
+        layout_izquierdo.addWidget(self.combo_origen)
+        layout_izquierdo.addWidget(self.etiqueta_destino)
+        layout_izquierdo.addWidget(self.combo_destino)
+        layout_izquierdo.addWidget(boton_encontrar)
+        layout_izquierdo.addWidget(self.etiqueta_resultado)
+        layout_izquierdo.addLayout(layout_formulario)
+        layout_izquierdo.addWidget(boton_agregar_persona)
+        layout_izquierdo.addWidget(boton_mostrar_amigos)
 
-        left_widget.setLayout(left_layout)
+        widget_izquierdo.setLayout(layout_izquierdo)
 
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
+        self.figura = Figure(figsize=(12, 8))
+        self.lienzo = FigureCanvas(self.figura)
 
-        splitter.addWidget(left_widget)
-        splitter.addWidget(self.canvas)
+        divisor.addWidget(widget_izquierdo)
+        divisor.addWidget(self.lienzo)
 
-        layout.addWidget(splitter)
+        layout.addWidget(divisor)
 
-        central_widget.setLayout(layout)
+        widget_central.setLayout(layout)
 
-        self.draw_graph()
+        self.dibujarGrafo()
 
-    def draw_graph(self, layout_algo=nx.spring_layout, **kwargs):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-        pos = layout_algo(self.graph, **kwargs)
-        nx.draw(self.graph, pos, with_labels=True, node_size=700, node_color='skyblue', edge_color='gray', font_size=10, ax=ax)
-        self.canvas.draw()
+    def dibujarGrafo(self, algoritmo_layout=nx.spring_layout, **kwargs):
+        self.figura.clear()
+        ax = self.figura.add_subplot(111)
+        pos = algoritmo_layout(self.grafo, **kwargs)
+        nx.draw(self.grafo, pos, with_labels=True, node_size=200, node_color='orange', edge_color='gray', font_size=10, ax=ax)
+        self.lienzo.draw()
 
-    def find_shortest_path(self):
-        person1 = self.combo_box_1.currentText()
-        person2 = self.combo_box_2.currentText()
-        if person1 and person2:
+    def encontrarCaminoMasCorto(self):
+        persona1 = self.combo_origen.currentText()
+        persona2 = self.combo_destino.currentText()
+        if persona1 and persona2:
             try:
-                shortest_path = nx.dijkstra_path(self.graph, person1, person2)
-                self.result_label.setText(f'Conexion: {" -> ".join(shortest_path)}')
+                camino_mas_corto = self.dijkstra(self.grafo, persona1, persona2)
+                self.etiqueta_resultado.setText(f'Conexión: {" -> ".join(camino_mas_corto)}')
 
-                subgraph = self.graph.subgraph(shortest_path).copy()
-                self.show_subgraph(subgraph, title='Ruta de Amigos')
+                subgrafo = self.grafo.subgraph(camino_mas_corto).copy()
+                self.mostrarSubgrafo(subgrafo, titulo='Ruta de Amigos')
 
-            except nx.NetworkXNoPath:
-                self.result_label.setText('No existe ruta entre las personas seleccionadas.')
+            except ValueError as e:
+                self.etiqueta_resultado.setText(str(e))
 
-    def add_person(self):
-        new_person = self.new_person_input.text()
-        num_connections = self.connections_spinbox.value()
-        if new_person and new_person not in self.graph:
-            self.graph.add_node(new_person)
-            self.names.append(new_person)
-            self.combo_box_1.addItem(new_person)
-            self.combo_box_2.addItem(new_person)
-            
-            existing_nodes = list(self.graph.nodes)
-            existing_nodes.remove(new_person)  # Remove the new person from the list to avoid self-loops
-            connections = random.sample(existing_nodes, num_connections)
-            for connection in connections:
-                self.graph.add_edge(new_person, connection)
+    def dijkstra(self, grafo, inicio, fin):
+        # Inicializar distancias y predecesores
+        distancias = {nodo: float('inf') for nodo in grafo}
+        distancias[inicio] = 0
+        predecesores = {nodo: None for nodo in grafo}
+        nodos_visitados = set()
+        nodos_no_visitados = set(grafo.nodes)
 
-            self.draw_graph()
+        while nodos_no_visitados:
+            # Seleccionar el nodo no visitado con la menor distancia
+            nodo_actual = min(nodos_no_visitados, key=lambda nodo: distancias[nodo])
 
-    def show_friends(self):
-        selected_person = self.combo_box_1.currentText()
-        if selected_person:
-            friends = list(self.graph.neighbors(selected_person))
-            friends.append(selected_person)  # Include the selected person in the subgraph
-            subgraph = self.graph.subgraph(friends).copy()
-            self.show_subgraph(subgraph, title=f'{selected_person}\'s Amigos')
+            # Si llegamos al nodo de destino, terminamos
+            if nodo_actual == fin:
+                break
 
-    def show_subgraph(self, subgraph, title):
-        self.subgraph_window = SubgraphWindow(subgraph, title=title)
-        self.subgraph_window.exec_()
+            # Marcar el nodo actual como visitado
+            nodos_no_visitados.remove(nodo_actual)
+            nodos_visitados.add(nodo_actual)
+
+            # Actualizar las distancias a los nodos vecinos
+            for vecino in grafo.neighbors(nodo_actual):
+                if vecino in nodos_visitados:
+                    continue
+                nueva_distancia = distancias[nodo_actual] + grafo[nodo_actual][vecino].get('weight', 1)
+                if nueva_distancia < distancias[vecino]:
+                    distancias[vecino] = nueva_distancia
+                    predecesores[vecino] = nodo_actual
+
+        # Reconstruir el camino más corto
+        camino_mas_corto = []
+        nodo_actual = fin
+        while nodo_actual is not None:
+            camino_mas_corto.insert(0, nodo_actual)
+            nodo_actual = predecesores[nodo_actual]
+
+        if distancias[fin] == float('inf'):
+            raise ValueError(f"No existe ruta entre {inicio} y {fin}.")
+
+        return camino_mas_corto
+
+    def agregarPersona(self):
+        nueva_persona = self.entrada_nueva_persona.text()
+        num_conexiones = self.spinbox_conexiones.value()
+        if nueva_persona and nueva_persona not in self.grafo:
+            self.grafo.add_node(nueva_persona)
+            self.nombres.append(nueva_persona)
+            self.combo_origen.addItem(nueva_persona)
+            self.combo_destino.addItem(nueva_persona)
+
+            nodos_existentes = list(self.grafo.nodes)
+            nodos_existentes.remove(nueva_persona)  # Remove the new person from the list to avoid self-loops
+            conexiones = random.sample(nodos_existentes, num_conexiones)
+            for conexion in conexiones:
+                self.grafo.add_edge(nueva_persona, conexion)
+
+            self.dibujarGrafo()
+
+    def mostrarAmigos(self):
+        persona_seleccionada = self.combo_origen.currentText()
+        if persona_seleccionada:
+            amigos = list(self.grafo.neighbors(persona_seleccionada))
+            amigos.append(persona_seleccionada)  # Include the selected person in the subgraph
+            subgrafo = self.grafo.subgraph(amigos).copy()
+            self.mostrarSubgrafo(subgrafo, titulo=f'Amigos de {persona_seleccionada}')
+
+    def mostrarSubgrafo(self, subgrafo, titulo):
+        self.ventana_subgrafo = VentanaSubgrafo(subgrafo, titulo=titulo)
+        self.ventana_subgrafo.exec_()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = GraphApp()
+    ex = AplicacionGrafo()
     ex.show()
     sys.exit(app.exec_())
