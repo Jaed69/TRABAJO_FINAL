@@ -5,34 +5,34 @@ import networkx as nx
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
                              QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox)
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import graphviz
 
-class VentanaSubgrafo(QDialog):
-    def __init__(self, subgrafo, titulo='Sub Grafo'):
+class VentanaGraphviz(QDialog):
+    def __init__(self, dot_source, titulo='Visualización de Camino Más Corto'):
         super().__init__()
-        self.subgrafo = subgrafo
+        self.dot_source = dot_source
         self.titulo = titulo
         self.iniciarUI()
 
     def iniciarUI(self):
         self.setWindowTitle(self.titulo)
         self.setGeometry(100, 100, 800, 600)
-
         layout = QVBoxLayout()
-        self.figura = Figure()
-        self.lienzo = FigureCanvas(self.figura)
-        layout.addWidget(self.lienzo)
-
+        self.label_imagen = QLabel()
+        self.label_imagen.setAlignment(Qt.AlignCenter)  # Centrar la imagen
+        layout.addWidget(self.label_imagen)
         self.setLayout(layout)
-        self.dibujarSubgrafo()
+        self.mostrarGraphviz()
 
-    def dibujarSubgrafo(self):
-        self.figura.clear()
-        ax = self.figura.add_subplot(111)
-        pos = nx.spring_layout(self.subgrafo, k=0.5, iterations=100)
-        nx.draw(self.subgrafo, pos, with_labels=True, node_size=700, node_color='orange', edge_color='red', width=2, font_size=10, ax=ax)
-        self.lienzo.draw()
+    def mostrarGraphviz(self):
+        dot = graphviz.Source(self.dot_source)
+        dot.format = 'png'
+        dot_path = 'graphviz_output'
+        dot.render(dot_path, format='png', cleanup=True)
+        self.label_imagen.setPixmap(QPixmap(f"{dot_path}.png"))
 
 class AplicacionGrafo(QMainWindow):
     def __init__(self):
@@ -203,6 +203,23 @@ class AplicacionGrafo(QMainWindow):
         """)
         boton_mostrar_amigos.clicked.connect(self.mostrarAmigos)
 
+        # Botón para salir de la aplicación
+        boton_salir = QPushButton('Salir')
+        boton_salir.setStyleSheet("""
+            QPushButton {
+                background-color: #555;
+                color: white;
+                padding: 10px 20px;
+                font-size: 14px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #333;
+            }
+        """)
+        boton_salir.clicked.connect(QApplication.quit)
+
         layout_izquierdo.addWidget(self.etiqueta_origen)
         layout_izquierdo.addWidget(self.combo_origen)
         layout_izquierdo.addWidget(self.etiqueta_destino)
@@ -212,6 +229,7 @@ class AplicacionGrafo(QMainWindow):
         layout_izquierdo.addLayout(layout_formulario)
         layout_izquierdo.addWidget(boton_agregar_persona)
         layout_izquierdo.addWidget(boton_mostrar_amigos)
+        layout_izquierdo.addWidget(boton_salir)
 
         widget_izquierdo.setLayout(layout_izquierdo)
 
@@ -231,7 +249,7 @@ class AplicacionGrafo(QMainWindow):
         self.figura.clear()
         ax = self.figura.add_subplot(111)
         pos = algoritmo_layout(self.grafo, **kwargs)
-        nx.draw(self.grafo, pos, with_labels=True, node_size=200, node_color='orange', edge_color='gray', font_size=10, ax=ax)
+        nx.draw(self.grafo, pos, with_labels=True, node_size=400, node_color='orange', edge_color='gray', font_size=10, ax=ax)
         self.lienzo.draw()
 
     def encontrarCaminoMasCorto(self):
@@ -242,14 +260,27 @@ class AplicacionGrafo(QMainWindow):
                 camino_mas_corto = self.dijkstra(self.grafo, persona1, persona2)
                 self.etiqueta_resultado.setText(f'Conexión: {" -> ".join(camino_mas_corto)}')
 
-                subgrafo = self.grafo.subgraph(camino_mas_corto).copy()
-                self.mostrarSubgrafo(subgrafo, titulo='Ruta de Amigos')
+                # Visualizar el camino más corto con Graphviz
+                self.visualizarCaminoGraphviz(camino_mas_corto)
 
             except ValueError as e:
                 self.etiqueta_resultado.setText(str(e))
 
+    def visualizarCaminoGraphviz(self, camino):
+        dot = graphviz.Digraph(comment='Camino Más Corto')
+
+        for nodo in camino:
+            dot.node(nodo)
+
+        for i in range(len(camino) - 1):
+            dot.edge(camino[i], camino[i + 1])
+
+        # Mostrar el gráfico de Graphviz en una ventana emergente
+        dot_source = dot.source
+        self.ventana_graphviz = VentanaGraphviz(dot_source, titulo='Camino Más Corto')
+        self.ventana_graphviz.exec_()
+
     def dijkstra(self, grafo, inicio, fin):
-        # Inicializar distancias y predecesores
         distancias = {nodo: float('inf') for nodo in grafo}
         distancias[inicio] = 0
         predecesores = {nodo: None for nodo in grafo}
@@ -257,18 +288,11 @@ class AplicacionGrafo(QMainWindow):
         nodos_no_visitados = set(grafo.nodes)
 
         while nodos_no_visitados:
-            # Seleccionar el nodo no visitado con la menor distancia
             nodo_actual = min(nodos_no_visitados, key=lambda nodo: distancias[nodo])
-
-            # Si llegamos al nodo de destino, terminamos
             if nodo_actual == fin:
                 break
-
-            # Marcar el nodo actual como visitado
             nodos_no_visitados.remove(nodo_actual)
             nodos_visitados.add(nodo_actual)
-
-            # Actualizar las distancias a los nodos vecinos
             for vecino in grafo.neighbors(nodo_actual):
                 if vecino in nodos_visitados:
                     continue
@@ -277,7 +301,6 @@ class AplicacionGrafo(QMainWindow):
                     distancias[vecino] = nueva_distancia
                     predecesores[vecino] = nodo_actual
 
-        # Reconstruir el camino más corto
         camino_mas_corto = []
         nodo_actual = fin
         while nodo_actual is not None:
@@ -297,26 +320,51 @@ class AplicacionGrafo(QMainWindow):
             self.nombres.append(nueva_persona)
             self.combo_origen.addItem(nueva_persona)
             self.combo_destino.addItem(nueva_persona)
-
             nodos_existentes = list(self.grafo.nodes)
-            nodos_existentes.remove(nueva_persona)  # Remove the new person from the list to avoid self-loops
+            nodos_existentes.remove(nueva_persona)
             conexiones = random.sample(nodos_existentes, num_conexiones)
             for conexion in conexiones:
                 self.grafo.add_edge(nueva_persona, conexion)
-
             self.dibujarGrafo()
 
     def mostrarAmigos(self):
         persona_seleccionada = self.combo_origen.currentText()
         if persona_seleccionada:
             amigos = list(self.grafo.neighbors(persona_seleccionada))
-            amigos.append(persona_seleccionada)  # Include the selected person in the subgraph
+            amigos.append(persona_seleccionada)
             subgrafo = self.grafo.subgraph(amigos).copy()
             self.mostrarSubgrafo(subgrafo, titulo=f'Amigos de {persona_seleccionada}')
 
     def mostrarSubgrafo(self, subgrafo, titulo):
         self.ventana_subgrafo = VentanaSubgrafo(subgrafo, titulo=titulo)
         self.ventana_subgrafo.exec_()
+
+class VentanaSubgrafo(QDialog):
+    def __init__(self, subgrafo, titulo='Subgrafo'):
+        super().__init__()
+        self.subgrafo = subgrafo
+        self.titulo = titulo
+        self.iniciarUI()
+
+    def iniciarUI(self):
+        self.setWindowTitle(self.titulo)
+        self.setGeometry(100, 100, 800, 600)
+        layout = QVBoxLayout()
+        self.label_imagen = QLabel()
+        self.label_imagen.setAlignment(Qt.AlignCenter)  # Centrar la imagen
+        layout.addWidget(self.label_imagen)
+        self.setLayout(layout)
+        self.mostrarSubgrafo()
+
+    def mostrarSubgrafo(self):
+        dot = graphviz.Digraph(comment=self.titulo)
+        for nodo in self.subgrafo.nodes():
+            dot.node(nodo)
+        for edge in self.subgrafo.edges():
+            dot.edge(edge[0], edge[1])
+        dot_path = 'subgrafo_output'
+        dot.render(dot_path, format='png', cleanup=True)
+        self.label_imagen.setPixmap(QPixmap(f"{dot_path}.png"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
