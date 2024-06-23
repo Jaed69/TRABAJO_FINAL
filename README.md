@@ -16,6 +16,8 @@ Para la realizacion de esta App usamos las libreias de Python:
        sys
        networkx
        pandas
+       PyQt5
+       matplotlib
        matplotlib
        
 
