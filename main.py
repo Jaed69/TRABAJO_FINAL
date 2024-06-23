@@ -3,7 +3,7 @@ import pandas as pd
 import random
 import networkx as nx
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
-                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox)
+                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox, QProgressBar)
 from PyQt5.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -120,6 +120,14 @@ class GraphApp(QMainWindow):
         show_friends_button = QPushButton('Mostrar Amigos')
         show_friends_button.clicked.connect(self.show_friends)
 
+        # Barra de progreso para mostrar el porcentaje de cumplimiento de los seis grados de separación
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+
+        # Etiquetas para mostrar el número de casos que cumplen y no cumplen con la teoría
+        self.cases_label = QLabel('Casos que cumplen: 0')
+        self.non_cases_label = QLabel('Casos que no cumplen: 0')
+
         left_layout.addWidget(self.combo_1_label)
         left_layout.addWidget(self.combo_box_1)
         left_layout.addWidget(self.combo_2_label)
@@ -129,6 +137,9 @@ class GraphApp(QMainWindow):
         left_layout.addLayout(form_layout)
         left_layout.addWidget(add_person_button)
         left_layout.addWidget(show_friends_button)
+        left_layout.addWidget(self.progress_bar)
+        left_layout.addWidget(self.cases_label)
+        left_layout.addWidget(self.non_cases_label)
 
         left_widget.setLayout(left_layout)
 
@@ -143,6 +154,7 @@ class GraphApp(QMainWindow):
         central_widget.setLayout(layout)
 
         self.draw_graph()
+        self.update_progress_bar()
 
     def draw_graph(self, layout_algo=nx.spring_layout, **kwargs):
         self.figure.clear()
@@ -165,6 +177,9 @@ class GraphApp(QMainWindow):
             except nx.NetworkXNoPath:
                 self.result_label.setText('No existe ruta entre las personas seleccionadas.')
 
+            # Actualizar la barra de progreso
+            self.update_progress_bar()
+
     def add_person(self):
         new_person = self.new_person_input.text()
         num_connections = self.connections_spinbox.value()
@@ -181,6 +196,8 @@ class GraphApp(QMainWindow):
                 self.graph.add_edge(new_person, connection)
 
             self.draw_graph()
+            # Actualizar la barra de progreso
+            self.update_progress_bar()
 
     def show_friends(self):
         selected_person = self.combo_box_1.currentText()
@@ -193,6 +210,31 @@ class GraphApp(QMainWindow):
     def show_subgraph(self, subgraph, title):
         self.subgraph_window = SubgraphWindow(subgraph, title=title)
         self.subgraph_window.exec_()
+
+    def update_progress_bar(self):
+        total_cases = 0
+        successful_cases = 0
+
+        for person1 in self.names:
+            for person2 in self.names:
+                if person1 != person2:
+                    total_cases += 1
+                    try:
+                        if nx.shortest_path_length(self.graph, person1, person2) <= 6:
+                            successful_cases += 1
+                    except nx.NetworkXNoPath:
+                        pass
+
+        non_successful_cases = total_cases - successful_cases
+
+        if total_cases > 0:
+            percentage = (successful_cases / total_cases) * 100
+        else:
+            percentage = 0
+
+        self.progress_bar.setValue(int(percentage))
+        self.cases_label.setText(f'Casos que cumplen: {successful_cases}')
+        self.non_cases_label.setText(f'Casos que no cumplen: {non_successful_cases}')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
