@@ -1,14 +1,17 @@
+import os
 import sys
 import pandas as pd
 import random
 import networkx as nx
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
-                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox, QProgressBar)
-from PyQt5.QtCore import Qt
+                             QComboBox, QSplitter, QDialog, QLineEdit, QFormLayout, QSpinBox)
+from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import graphviz
+import json
 
 class VentanaGraphviz(QDialog):
     def __init__(self, dot_source, titulo='Visualización de Camino Más Corto'):
@@ -240,24 +243,24 @@ class AplicacionGrafo(QMainWindow):
 
         widget_izquierdo.setLayout(layout_izquierdo)
 
-        self.figura = Figure(figsize=(12, 8))
-        self.lienzo = FigureCanvas(self.figura)
+        #self.figura = Figure(figsize=(12, 8))
+        #self.lienzo = FigureCanvas(self.figura)
+
+        # Añadir QWebEngineView para la visualización 3D
+        self.web_view = QWebEngineView()
+        self.web_view.settings().setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
+        self.web_view.settings().setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, True)
+        path_to_html = os.path.abspath('./graph.html')
+        self.web_view.setUrl(QUrl.fromLocalFile(path_to_html))
 
         divisor.addWidget(widget_izquierdo)
-        divisor.addWidget(self.lienzo)
+        divisor.addWidget(self.web_view)
 
         layout.addWidget(divisor)
 
         widget_central.setLayout(layout)
 
-        self.dibujarGrafo()
-
-    def dibujarGrafo(self, algoritmo_layout=nx.spring_layout, **kwargs):
-        self.figura.clear()
-        ax = self.figura.add_subplot(111)
-        pos = algoritmo_layout(self.grafo, **kwargs)
-        nx.draw(self.grafo, pos, with_labels=True, node_size=400, node_color='orange', edge_color='gray', font_size=10, ax=ax)
-        self.lienzo.draw()
+        self.enviarDatosGrafo()
 
     def encontrarCaminoMasCorto(self):
         persona1 = self.combo_origen.currentText()
@@ -325,7 +328,7 @@ class AplicacionGrafo(QMainWindow):
             conexiones = random.sample(nodos_existentes, num_conexiones)
             for conexion in conexiones:
                 self.grafo.add_edge(nueva_persona, conexion)
-            self.dibujarGrafo()
+            self.enviarDatosGrafo()
 
     def mostrarAmigos(self):
         persona_seleccionada = self.combo_origen.currentText()
@@ -353,6 +356,13 @@ class AplicacionGrafo(QMainWindow):
         porcentaje_cumplen = (casos_cumplen / total_casos) * 100
         self.etiqueta_resultado.setText(f'{casos_cumplen} de {total_casos} casos cumplen con el Teorema de 6 Grados ({porcentaje_cumplen:.2f}%)')
 
+    def enviarDatosGrafo(self):
+        nodes = [{"id": str(nodo), "group": 1} for nodo in self.grafo.nodes]
+        links = [{"source": str(origen), "target": str(destino), "value": 1} for origen, destino in self.grafo.edges]
+        graph_data = {"nodes": nodes, "links": links}
+        with open('data.json', 'w') as json_file:
+            json.dump(graph_data, json_file, indent=4)
+        self.web_view.page().runJavaScript(f'createGraph({json.dumps(graph_data)})')
 class VentanaSubgrafo(QDialog):
     def __init__(self, subgrafo, titulo='Subgrafo'):
         super().__init__()
