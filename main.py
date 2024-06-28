@@ -22,7 +22,7 @@ class VentanaGraphviz(QDialog):
         self.setGeometry(100, 100, 800, 600)
         layout = QVBoxLayout()
         self.label_imagen = QLabel()
-        self.label_imagen.setAlignment(Qt.AlignCenter)  # Centrar la imagen
+        self.label_imagen.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.label_imagen)
         self.setLayout(layout)
         self.mostrarGraphviz()
@@ -38,11 +38,8 @@ class AplicacionGrafo(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Crear el grafo desde el archivo Excel
         self.grafo = self.crearGrafosDesdeExcel('nombres_personas.xlsx')
         self.nombres = list(self.grafo.nodes)
-
-        # Configurar la interfaz de usuario
         self.iniciarUI()
 
     def crearGrafosDesdeExcel(self, archivo_excel):
@@ -52,7 +49,6 @@ class AplicacionGrafo(QMainWindow):
 
         G = nx.DiGraph()
 
-        # Conexiones dentro de la columna A
         for persona in personas_A:
             num_conexiones = random.randint(2, 4)
             conexiones = random.sample(personas_A, num_conexiones)
@@ -60,7 +56,6 @@ class AplicacionGrafo(QMainWindow):
                 if persona != conexion:
                     G.add_edge(persona, conexion)
 
-        # Conexiones dentro de la columna B
         for persona in personas_B:
             num_conexiones = random.randint(2, 4)
             conexiones = random.sample(personas_B, num_conexiones)
@@ -68,7 +63,6 @@ class AplicacionGrafo(QMainWindow):
                 if persona != conexion:
                     G.add_edge(persona, conexion)
 
-        # Conexiones entre las columnas A y B
         for persona_A in personas_A:
             num_conexiones = random.randint(2, 4)
             conexiones = random.sample(personas_B, num_conexiones)
@@ -79,7 +73,7 @@ class AplicacionGrafo(QMainWindow):
 
     def iniciarUI(self):
         self.setWindowTitle('Trabajo Final Complejidad')
-        self.setGeometry(100, 100, 1600, 900)  # Aumentamos el tamaño de la ventana principal
+        self.setGeometry(100, 100, 1600, 900)
 
         widget_central = QWidget()
         self.setCentralWidget(widget_central)
@@ -91,7 +85,6 @@ class AplicacionGrafo(QMainWindow):
         widget_izquierdo = QWidget()
         layout_izquierdo = QVBoxLayout()
 
-        # Estilo para los subtítulos
         estilo_etiqueta = """
             QLabel {
                 font-size: 16px;
@@ -108,17 +101,16 @@ class AplicacionGrafo(QMainWindow):
         self.etiqueta_destino.setStyleSheet(estilo_etiqueta)
         self.combo_destino = QComboBox()
 
-        # Estilo para el QComboBox
         estilo_combobox = """
             QComboBox {
-                font-size: 18px; /* Tamaño de fuente más grande */
-                padding: 10px; /* Aumentar el relleno */
-                min-width: 200px; /* Ancho mínimo */
-                min-height: 40px; /* Altura mínima */
+                font-size: 18px;
+                padding: 10px;
+                min-width: 200px;
+                min-height: 40px;
             }
             QComboBox QAbstractItemView {
-                font-size: 18px; /* Tamaño de fuente más grande para las opciones */
-                padding: 10px; /* Aumentar el relleno */
+                font-size: 18px;
+                padding: 10px;
             }
         """
         self.combo_origen.setStyleSheet(estilo_combobox)
@@ -148,23 +140,22 @@ class AplicacionGrafo(QMainWindow):
         self.etiqueta_resultado.setStyleSheet("QLabel { font-size: 14px; }")
         self.etiqueta_resultado.setWordWrap(True)
 
-        # Formulario para agregar nueva persona
         layout_formulario = QFormLayout()
         self.entrada_nueva_persona = QLineEdit()
         self.entrada_nueva_persona.setStyleSheet("""
             QLineEdit {
-                font-size: 16px; /* Tamaño de fuente */
-                padding: 8px; /* Relleno */
-                min-height: 30px; /* Altura mínima */
+                font-size: 16px;
+                padding: 8px;
+                min-height: 30px;
             }
         """)
         self.spinbox_conexiones = QSpinBox()
         self.spinbox_conexiones.setRange(1, 10)
         self.spinbox_conexiones.setStyleSheet("""
             QSpinBox {
-                font-size: 16px; /* Tamaño de fuente */
-                padding: 8px; /* Relleno */
-                min-height: 30px; /* Altura mínima */
+                font-size: 16px;
+                padding: 8px;
+                min-height: 30px;
             }
         """)
         layout_formulario.addRow('Nombre de nueva persona:', self.entrada_nueva_persona)
@@ -186,7 +177,6 @@ class AplicacionGrafo(QMainWindow):
         """)
         boton_agregar_persona.clicked.connect(self.agregarPersona)
 
-        # Botón para mostrar amigos
         boton_mostrar_amigos = QPushButton('Mostrar Amigos')
         boton_mostrar_amigos.setStyleSheet("""
             QPushButton {
@@ -203,7 +193,6 @@ class AplicacionGrafo(QMainWindow):
         """)
         boton_mostrar_amigos.clicked.connect(self.mostrarAmigos)
 
-        # Botón para salir de la aplicación
         boton_salir = QPushButton('Salir')
         boton_salir.setStyleSheet("""
             QPushButton {
@@ -220,6 +209,23 @@ class AplicacionGrafo(QMainWindow):
         """)
         boton_salir.clicked.connect(QApplication.quit)
 
+        # Añadir el nuevo botón para verificar el teorema de los 6 grados
+        boton_verificar_6_grados = QPushButton('Verificar Teorema de 6 Grados')
+        boton_verificar_6_grados.setStyleSheet("""
+            QPushButton {
+                background-color: #ff9800;
+                color: white;
+                padding: 10px 20px;
+                font-size: 14px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #e68900;
+            }
+        """)
+        boton_verificar_6_grados.clicked.connect(self.verificarTeorema6Grados)
+
         layout_izquierdo.addWidget(self.etiqueta_origen)
         layout_izquierdo.addWidget(self.combo_origen)
         layout_izquierdo.addWidget(self.etiqueta_destino)
@@ -230,6 +236,7 @@ class AplicacionGrafo(QMainWindow):
         layout_izquierdo.addWidget(boton_agregar_persona)
         layout_izquierdo.addWidget(boton_mostrar_amigos)
         layout_izquierdo.addWidget(boton_salir)
+        layout_izquierdo.addWidget(boton_verificar_6_grados)
 
         widget_izquierdo.setLayout(layout_izquierdo)
 
@@ -259,23 +266,16 @@ class AplicacionGrafo(QMainWindow):
             try:
                 camino_mas_corto = self.dijkstra(self.grafo, persona1, persona2)
                 self.etiqueta_resultado.setText(f'Conexión: {" -> ".join(camino_mas_corto)}')
-
-                # Visualizar el camino más corto con Graphviz
                 self.visualizarCaminoGraphviz(camino_mas_corto)
-
             except ValueError as e:
                 self.etiqueta_resultado.setText(str(e))
 
     def visualizarCaminoGraphviz(self, camino):
         dot = graphviz.Digraph(comment='Camino Más Corto')
-
         for nodo in camino:
             dot.node(nodo)
-
         for i in range(len(camino) - 1):
             dot.edge(camino[i], camino[i + 1])
-
-        # Mostrar el gráfico de Graphviz en una ventana emergente
         dot_source = dot.source
         self.ventana_graphviz = VentanaGraphviz(dot_source, titulo='Camino Más Corto')
         self.ventana_graphviz.exec_()
@@ -339,6 +339,20 @@ class AplicacionGrafo(QMainWindow):
         self.ventana_subgrafo = VentanaSubgrafo(subgrafo, titulo=titulo)
         self.ventana_subgrafo.exec_()
 
+    def verificarTeorema6Grados(self):
+        total_casos = 0
+        casos_cumplen = 0
+
+        for nodo in self.grafo.nodes:
+            distancias = nx.single_source_shortest_path_length(self.grafo, nodo)
+            for distancia in distancias.values():
+                total_casos += 1
+                if distancia <= 6:
+                    casos_cumplen += 1
+
+        porcentaje_cumplen = (casos_cumplen / total_casos) * 100
+        self.etiqueta_resultado.setText(f'{casos_cumplen} de {total_casos} casos cumplen con el Teorema de 6 Grados ({porcentaje_cumplen:.2f}%)')
+
 class VentanaSubgrafo(QDialog):
     def __init__(self, subgrafo, titulo='Subgrafo'):
         super().__init__()
@@ -351,7 +365,7 @@ class VentanaSubgrafo(QDialog):
         self.setGeometry(100, 100, 800, 600)
         layout = QVBoxLayout()
         self.label_imagen = QLabel()
-        self.label_imagen.setAlignment(Qt.AlignCenter)  # Centrar la imagen
+        self.label_imagen.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.label_imagen)
         self.setLayout(layout)
         self.mostrarSubgrafo()
